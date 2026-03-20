@@ -1,8 +1,12 @@
 # Makefile for FPGA Design Optimization Agent
 
 # Configuration
-PYTHON := python3
-PIP := $(PYTHON) -m pip
+VENV_DIR := .venv
+# Point these to the binaries inside the virtual environment
+PYTHON   := $(VENV_DIR)/bin/python3
+PIP      := $(VENV_DIR)/bin/pip
+
+SYSTEM_PYTHON := python3
 
 # Vivado executable - can be overridden with: make setup VIVADO_EXEC=/path/to/vivado
 VIVADO_EXEC ?= vivado
@@ -87,9 +91,18 @@ setup:
 	@printf "$(COLOR_GREEN)===== FPGA Design Optimization Setup =====$(COLOR_RESET)\n"
 	@echo ""
 	
-	@printf "$(COLOR_YELLOW)[1/5] Installing Python dependencies...$(COLOR_RESET)\n"
+	@printf "$(COLOR_YELLOW)[1/5] Setting up Virtual Environment...$(COLOR_RESET)\n"
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		$(SYSTEM_PYTHON) -m venv $(VENV_DIR); \
+		printf "$(COLOR_GREEN)✓ Virtual environment created in $(VENV_DIR)$(COLOR_RESET)\n"; \
+	else \
+		printf "$(COLOR_BLUE)ℹ Virtual environment already exists$(COLOR_RESET)\n"; \
+	fi
+	
+	@printf "$(COLOR_YELLOW)Updating pip and installing dependencies...$(COLOR_RESET)\n"
+	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
-	@printf "$(COLOR_GREEN)✓ Python dependencies installed$(COLOR_RESET)\n"
+	@printf "$(COLOR_GREEN)✓ Python dependencies installed in venv$(COLOR_RESET)\n"
 	@echo ""
 	
 	@printf "$(COLOR_YELLOW)[2/5] Checking Vivado...$(COLOR_RESET)\n"
@@ -318,4 +331,6 @@ veryclean: clean
 	@# Remove example DCPs
 	@rm -f $(EXAMPLE_DCP_1) $(EXAMPLE_DCP_2)
 	@echo "Removed example DCPs"
+	@rm -rf $(VENV_DIR)
+	@echo "Removed venv"
 	@printf "$(COLOR_GREEN)✓ Deep clean complete$(COLOR_RESET)\n"
